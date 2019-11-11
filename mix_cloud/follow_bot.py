@@ -1,23 +1,22 @@
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from time import sleep, strftime
-from random import randint
+import random
+from os import path
+from UserAccount import UserAccount
 
-chromedriver_path = 'C:/Users/plagambino/Documents/Other_Work/Bot/chromedriver.exe' 
-webdriver = webdriver.Chrome(executable_path=chromedriver_path)
-
-sleep(1)
+chromedriver_path = '../Bot/chromedriver.exe' 
 
 # Login Process
-def login():
+def login(account):
     webdriver.get('https://www.mixcloud.com')
-    sleep(4)
+    sleep(2)
     login_button_1 = webdriver.find_element_by_xpath('//*[@id="react-root"]/div/section/div[3]/div/div/header/div/div[3]/div/span[1]')
     login_button_1.click()
     username = webdriver.find_element_by_xpath('//*[@id="react-root"]/div/section/div[1]/span[16]/div/div[2]/div/div/div/form/div[1]/div/input')
-    username.send_keys('redshirtsmusicexperience@gmail.com')
+    username.send_keys(account.username)
     password = webdriver.find_element_by_xpath('//*[@id="react-root"]/div/section/div[1]/span[16]/div/div[2]/div/div/div/form/div[2]/div/input')
-    password.send_keys('ket6D91gip')
+    password.send_keys(account.password)
     sleep(2)
     password.send_keys(Keys.RETURN)
 
@@ -49,42 +48,33 @@ def genreFollow(genre):
 # Follow Block
 # //*[@id="react-root"]/div/section/div[4]/div/div/div[1]/div/div/section/div[1]/div[2]/div[2]/section/div/ul/li[1]
 
-def followersFollow(person):
-    sleep(4)
-    webdriver.get('https://www.mixcloud.com/DjHIDEKI/followers/')
-    follow_list = webdriver.find_elements_by_xpath('//*[@id="react-root"]/div/section/div[4]/div/div/div/div/div[4]/main/div[1]/div[2]/ul/li')
-    max_val = len(follow_list)
+def followersFollow(person, account):
+    commonPath = '/html/body/div[1]/div/section/div[4]/div/div/div/div/div[4]/main'
+    sleep(2)      
+    webdriver.get('https://www.mixcloud.com/' + person + '/followers/')
+    follow_list = webdriver.find_elements_by_xpath(commonPath + '/div[1]/div[2]/ul/li')
     index = 1
-    scroll_down_val = 0
+    like_count = 0
     follow_doc = open("followList.txt","a")
-    while(scroll_down_val < 100):
-        like_num = randint(10,20)
-        like_count = 0
-        for val in range(index,max_val):
-            if(like_count == like_num):
-                sleep(randint(600,1000))
-                like_count = 0
-            # webdriver.execute_script("window.scrollTo(0, document.body.scrollHeight)") 
+    while(like_count < int(account.numInteractions)):
+        for val in range(index,len(follow_list)):
             try:
-                # Attempt to click follow button
-                follow_button = webdriver.find_element_by_xpath('//*[@id="react-root"]/div/section/div[4]/div/div/div/div/div[4]/main/div[1]/div[2]/ul/li['+str(val)+']/button')
+                follow_button = webdriver.find_element_by_xpath('/html/body/div[1]/div/section/div[4]/div/div/div/div/div[4]/main/div[1]/div[2]/ul/li['+str(val)+']/button')
                 webdriver.execute_script("return arguments[0].scrollIntoView();", follow_button)
-                webdriver.execute_script("window.scrollBy(0, -" + str(randint(170,200)) + ")")
-                sleep(randint(1,6))
+                webdriver.execute_script("window.scrollBy(0, -" + str(random.randint(170,200)) + ")")
+                sleep(random.uniform(.5,1))
                 follow_button.click()
-                webdriver.execute_script("window.scrollBy(0, -" + str(randint(10,20)) + ")")
-                name = webdriver.find_element_by_xpath('//*[@id="react-root"]/div/section/div[4]/div/div/div/div/div[4]/main/div[1]/div[2]/ul/li['+str(val)+']/span/b/span/a')
+                webdriver.execute_script("window.scrollBy(0, -" + str(random.randint(10,20)) + ")")
+                name = webdriver.find_element_by_xpath('/html/body/div[1]/div/section/div[4]/div/div/div/div/div[4]/main/div[1]/div[2]/ul/li['+str(val)+']/span/b/span/a')
                 follow_doc.write(name.get_attribute("href")+ "," + name.text + '\n')
                 like_count = like_count + 1
             except:
-                print("no follow button: " + '//*[@id="react-root"]/div/section/div[4]/div/div/div[1]/div/div/section/div[1]/div[2]/div[2]/section/div/ul/li['+str(val)+']/button')
+                print("no follow button: "+str(val))
             webdriver.execute_script("window.scrollBy(0, 200)")
-        sleep(3)
-        follow_list = webdriver.find_elements_by_xpath('//*[@id="react-root"]/div/section/div[4]/div/div/div/div/div[4]/main/div[1]/div[2]/ul/li')
-        index = max_val
-        max_val = len(follow_list)
-        print(len(follow_list))
-        scroll_down_val += 1
+            if(like_count >= int(account.numInteractions)):
+                break
+        index = len(follow_list)
+        follow_list = webdriver.find_elements_by_xpath(commonPath+'/div[1]/div[2]/ul/li')
     follow_doc.close()
 
 def scroll():
@@ -93,12 +83,45 @@ def scroll():
     sleep(1)
     webdriver.execute_script("return arguments[0].scrollIntoView();", follow_button)
 
-if __name__ == "__main__":
-    print('Mixcloud Follow Run')
-    login()
-    followersFollow('house')
-    
+def parseUserDoc():
+    accounts = []
+    accountDoc = open("./bot_docs/accountInfo.txt","r")
+    for line in accountDoc.readlines():
+        split = line.rstrip().split(',')
+        hashtags = []
+        for val in split[5].split('||'):
+            hashtags.append(val)
+        account = UserAccount(split[0],split[1],split[2],split[3],split[4], hashtags[1:], split[6])
+        accounts.append(account)
+    accountDoc.close()
+    return accounts
 
-# notnow = webdriver.find_element_by_css_selector('body > div:nth-child(13) > div > div > div > div.mt3GC > button.aOOlW.HoLwm')
-# notnow.click() #comment these last 2 lines out, if you don't get a pop up asking about notifications
-# //*[@id="react-root"]/div/section/div[4]/div/div/div/div/div[4]/main/div[1]/div[2]/ul/li[15]/button/span
+def accountInfo(account):
+    print("\nAccount " + account.username)
+    print("Like Percentage: " + account.likePercentage)
+    print("Comment Percentage: " + account.commentPercentage)
+    print("Num Accounts to Interact: " + account.numInteractions)
+    print("Hashtags Searches: " + str(account.hashtags))
+    
+def getDefault(accounts):
+    for account in accounts:
+        if int(account.default) == 1:
+            return account
+    print('NO DEFAULT ACCOUNT RUN ADMIN SCRIPT. Admin.py')
+    exit
+
+
+if __name__ == "__main__":
+    print('Mixcloud Quick Follow')
+    if not path.exists("./bot_docs/accountInfo.txt"):
+        print('NO BOTS RUN ADMIN SCRIPT. Admin.py')
+        exit()
+    else:
+        accounts = parseUserDoc()
+    defaultAccount = getDefault(accounts)
+    accountInfo(defaultAccount)
+    webdriver = webdriver.Chrome(executable_path=chromedriver_path)
+    login(defaultAccount)
+    for person in defaultAccount.hashtags:
+        followersFollow(person, defaultAccount)
+    

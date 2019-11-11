@@ -6,7 +6,7 @@ import datetime
 from os import path
 from UserAccount import UserAccount
 
-chromedriver_path = 'C:/Users/plagambino/Documents/Other_Work/Bot/chromedriver.exe' 
+chromedriver_path = '../Bot/chromedriver.exe' 
 sleep(1)
 
 # Login Process
