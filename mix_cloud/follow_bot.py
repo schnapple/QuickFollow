@@ -2,10 +2,9 @@ from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from time import sleep, strftime
 import random
+import sys
 from os import path
 from UserAccount import UserAccount
-
-chromedriver_path = '../Bot/chromedriver.exe' 
 
 # Login Process
 def login(account):
@@ -35,7 +34,6 @@ def genreFollow(genre):
     sleep(2)
     follow_list = webdriver.find_elements_by_xpath('//*[@id="react-root"]/div/section/div[4]/div/div/div[1]/div/div/section/div[1]/div[2]/div[2]/section/div/ul/li')
     max_val = len(follow_list)
-    # print(follow_list)
     for val in range(3,max_val):
         try:
             follow_button = webdriver.find_element_by_xpath('//*[@id="react-root"]/div/section/div[4]/div/div/div[1]/div/div/section/div[1]/div[2]/div[2]/section/div/ul/li['+str(val)+']/button')
@@ -43,10 +41,7 @@ def genreFollow(genre):
             print("Clicked: " + '//*[@id="react-root"]/div/section/div[4]/div/div/div[1]/div/div/section/div[1]/div[2]/div[2]/section/div/ul/li['+str(val)+']/button')
         except:
             print("no follow button: " + '//*[@id="react-root"]/div/section/div[4]/div/div/div[1]/div/div/section/div[1]/div[2]/div[2]/section/div/ul/li['+str(val)+']/button')
-        # print(follow_button)
         sleep(1)
-# Follow Block
-# //*[@id="react-root"]/div/section/div[4]/div/div/div[1]/div/div/section/div[1]/div[2]/div[2]/section/div/ul/li[1]
 
 def followersFollow(person, account):
     commonPath = '/html/body/div[1]/div/section/div[4]/div/div/div/div/div[4]/main'
@@ -58,21 +53,22 @@ def followersFollow(person, account):
     follow_doc = open("followList.txt","a")
     while(like_count < int(account.numInteractions)):
         for val in range(index,len(follow_list)):
-            try:
-                follow_button = webdriver.find_element_by_xpath('/html/body/div[1]/div/section/div[4]/div/div/div/div/div[4]/main/div[1]/div[2]/ul/li['+str(val)+']/button')
-                webdriver.execute_script("return arguments[0].scrollIntoView();", follow_button)
-                webdriver.execute_script("window.scrollBy(0, -" + str(random.randint(170,200)) + ")")
-                sleep(random.uniform(.5,1))
-                follow_button.click()
-                webdriver.execute_script("window.scrollBy(0, -" + str(random.randint(10,20)) + ")")
-                name = webdriver.find_element_by_xpath('/html/body/div[1]/div/section/div[4]/div/div/div/div/div[4]/main/div[1]/div[2]/ul/li['+str(val)+']/span/b/span/a')
-                follow_doc.write(name.get_attribute("href")+ "," + name.text + '\n')
-                like_count = like_count + 1
-            except:
-                print("no follow button: "+str(val))
-            webdriver.execute_script("window.scrollBy(0, 200)")
-            if(like_count >= int(account.numInteractions)):
-                break
+            if random.randint(0,5) > 2:
+                try:
+                    follow_button = webdriver.find_element_by_xpath(commonPath + '/div[1]/div[2]/ul/li['+str(val)+']/button')
+                    webdriver.execute_script("return arguments[0].scrollIntoView();", follow_button)
+                    webdriver.execute_script("window.scrollBy(0, -" + str(random.randint(150,200)) + ")")
+                    sleep(random.uniform(.5,1))
+                    follow_button.click()
+                    webdriver.execute_script("window.scrollBy(0, -" + str(random.randint(10,50)) + ")")
+                    name = webdriver.find_element_by_xpath(commonPath + '/div[1]/div[2]/ul/li['+str(val)+']/span/b/span/a')
+                    follow_doc.write(name.get_attribute("href")+ "," + name.text + '\n')
+                    like_count = like_count + 1
+                except:
+                    print("no follow button: "+str(val))
+                webdriver.execute_script("window.scrollBy(0, 200)")
+                if(like_count >= int(account.numInteractions)):
+                    break
         index = len(follow_list)
         follow_list = webdriver.find_elements_by_xpath(commonPath+'/div[1]/div[2]/ul/li')
     follow_doc.close()
@@ -83,9 +79,9 @@ def scroll():
     sleep(1)
     webdriver.execute_script("return arguments[0].scrollIntoView();", follow_button)
 
-def parseUserDoc():
+def parseUserDoc(commandPath):
     accounts = []
-    accountDoc = open("./bot_docs/accountInfo.txt","r")
+    accountDoc = open(commandPath+"/mix_cloud/bot_docs/accountInfo.txt","r")
     for line in accountDoc.readlines():
         split = line.rstrip().split(',')
         hashtags = []
@@ -113,15 +109,20 @@ def getDefault(accounts):
 
 if __name__ == "__main__":
     print('Mixcloud Quick Follow')
-    if not path.exists("./bot_docs/accountInfo.txt"):
+    commandPath = "C:/Users/plagambino/Documents/Other_Work/QuickFollow/"
+    if len(sys.argv) > 1:
+        commandPath = sys.argv[1]
+    if not path.exists(commandPath+"mix_cloud/bot_docs/accountInfo.txt"):
         print('NO BOTS RUN ADMIN SCRIPT. Admin.py')
         exit()
     else:
-        accounts = parseUserDoc()
+        accounts = parseUserDoc(commandPath)
+    chromedriver_path = commandPath+'Bot/chromedriver.exe' 
     defaultAccount = getDefault(accounts)
     accountInfo(defaultAccount)
     webdriver = webdriver.Chrome(executable_path=chromedriver_path)
     login(defaultAccount)
     for person in defaultAccount.hashtags:
-        followersFollow(person, defaultAccount)
+        if random.randint(0,10) > 6:
+            followersFollow(person, defaultAccount)
     

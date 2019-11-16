@@ -4,6 +4,11 @@ import datetime
 from os import path
 from UserAccount import UserAccount
 
+chromedriver_path = 'C:/Users/plagambino/Documents/Other_Work/Bot/chromedriver.exe' 
+sleep(1)
+
+
+
 def createFollowBotAccount():
     userDoc = open("./bot_docs/accountInfo.txt", "a")
     print('Welcome New Quick Follow User Create Account.')
