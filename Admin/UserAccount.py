@@ -11,5 +11,4 @@ class UserAccount:
     
     def setDefault(self):
         self.default = 1
-
         #User Doc Format: accountType, email, password, numInteractions, hashtags, users

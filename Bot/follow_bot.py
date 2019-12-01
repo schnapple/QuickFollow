@@ -5,17 +5,18 @@ import random
 import sys
 from os import path
 from UserAccount import UserAccount
+from MixcloudXcode import MixcloudXcode
 
-
+xcode = MixcloudXcode()
 
 # Login Process
 def login(account):
     webdriver.get('https://www.mixcloud.com')
     sleep(2)
-    login_button_1 = webdriver.find_element_by_xpath('//*[@id="react-root"]/div/section/div[3]/div/div/header/div/div[3]/div/span[1]')
-    login_button_1.click()
-    username = webdriver.find_element_by_xpath('//*[@id="react-root"]/div/section/div[1]/span[16]/div/div[2]/div/div/div/form/div[1]/div/input')
-    username.send_keys(account.username)
+    login_button = webdriver.find_element_by_xpath(xcode.login_button)
+    login_button.click()
+    email = webdriver.find_element_by_xpath('//*[@id="react-root"]/div/section/div[1]/span[16]/div/div[2]/div/div/div/form/div[1]/div/input')
+    email.send_keys(account.email)
     password = webdriver.find_element_by_xpath('//*[@id="react-root"]/div/section/div[1]/span[16]/div/div[2]/div/div/div/form/div[2]/div/input')
     password.send_keys(account.password)
     sleep(2)
@@ -91,7 +92,7 @@ def scroll():
 
 def parseUserDoc():
     accounts = []
-    accountDoc = open("./bot_docs/accountInfo.txt","r")
+    accountDoc = open("../Admin/account-info/accountInfo.txt","r")
     for line in accountDoc.readlines():
         split = line.rstrip().split(',')
         hashtags = []
@@ -122,21 +123,20 @@ def getTargetAccount(accounts, accountID):
 
 
 if __name__ == "__main__":
-    print('Mixcloud Quick Follow')
-    commandPath = "C:/Users/Phil/Documents/QuickFollow/"
     if len(sys.argv) > 2:
         commandPath = sys.argv[1]
         accountID = sys.argv[2]
     else:
         print('NOT ENOUGH ARGS. Need path working directory and User ID. Admin.py')
         exit()
-    if  not path.exists(commandPath+"mix_cloud/bot_docs/accountInfo.txt"):
-        print('Incorrect Account Info Path or No Accounts! Run Admin.py')
+    if  not path.exists(commandPath+"Admin/account-info/accountInfo.txt"):
+        print('Incorrect Account Info Path! Run Admin.py')
         exit()
     else:
         accounts = parseUserDoc()
-    chromedriver_path = commandPath+'Bot/chromedriver.exe' 
     curAccount = getTargetAccount(accounts, accountID)
+    chromedriver_path = commandPath+'Bot/chromedriver.exe' 
+    print('Quick Follow is Running %s Version' %(curAccount.accountType))
     accountInfo(curAccount)
     webdriver = webdriver.Chrome(executable_path=chromedriver_path)
     login(curAccount)
