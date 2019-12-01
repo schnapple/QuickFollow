@@ -1,13 +1,15 @@
 class UserAccount:
-    def __init__(self, username, password, likePercentage, commentPercentage, numInteract, hashtags, default):
-        self.username = username
+    def __init__(self, accountType, email, password, numInteract, hashtags, users, id):
+        self.accountType = accountType
+        self.email = email
         self.password = password
-        self.likePercentage = likePercentage
-        self.commentPercentage = commentPercentage
         self.numInteractions = numInteract
         self.commentList = []
         self.hashtags = hashtags
-        self.default = default
+        self.users = users
+        self.id = id
     
     def setDefault(self):
         self.default = 1
+
+        #User Doc Format: accountType, email, password, numInteractions, hashtags, users

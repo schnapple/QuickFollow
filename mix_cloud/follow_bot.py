@@ -6,6 +6,8 @@ import sys
 from os import path
 from UserAccount import UserAccount
 
+
+
 # Login Process
 def login(account):
     webdriver.get('https://www.mixcloud.com')
@@ -43,26 +45,33 @@ def genreFollow(genre):
             print("no follow button: " + '//*[@id="react-root"]/div/section/div[4]/div/div/div[1]/div/div/section/div[1]/div[2]/div[2]/section/div/ul/li['+str(val)+']/button')
         sleep(1)
 
-def followersFollow(person, account):
+def followersFollow(person, account, stopFlag):
     commonPath = '/html/body/div[1]/div/section/div[4]/div/div/div/div/div[4]/main'
     sleep(2)      
     webdriver.get('https://www.mixcloud.com/' + person + '/followers/')
     follow_list = webdriver.find_elements_by_xpath(commonPath + '/div[1]/div[2]/ul/li')
     index = 1
     like_count = 0
-    follow_doc = open("followList.txt","a")
+    # follow_doc = open("followList.txt","a")
     while(like_count < int(account.numInteractions)):
         for val in range(index,len(follow_list)):
-            if random.randint(0,5) > 2:
+            if random.randint(0,5) > 2 and stopFlag:
                 try:
                     follow_button = webdriver.find_element_by_xpath(commonPath + '/div[1]/div[2]/ul/li['+str(val)+']/button')
                     webdriver.execute_script("return arguments[0].scrollIntoView();", follow_button)
                     webdriver.execute_script("window.scrollBy(0, -" + str(random.randint(150,200)) + ")")
-                    sleep(random.uniform(.5,1))
+                    sleep(random.uniform(.5,6))
                     follow_button.click()
+                    sleep(random.uniform(.5,2))
+                    follow_text = webdriver.find_element_by_xpath(commonPath + '/div[1]/div[2]/ul/li['+str(val)+']/button/span')
+                    print(follow_text.text)
+                    if follow_text.text == 'Follow':
+                        print('Hit Max follows stopping')
+                        stopFlag = False
+                        
                     webdriver.execute_script("window.scrollBy(0, -" + str(random.randint(10,50)) + ")")
                     name = webdriver.find_element_by_xpath(commonPath + '/div[1]/div[2]/ul/li['+str(val)+']/span/b/span/a')
-                    follow_doc.write(name.get_attribute("href")+ "," + name.text + '\n')
+                    # follow_doc.write(name.get_attribute("href")+ "," + name.text + '\n')
                     like_count = like_count + 1
                 except:
                     print("no follow button: "+str(val))
@@ -71,7 +80,8 @@ def followersFollow(person, account):
                     break
         index = len(follow_list)
         follow_list = webdriver.find_elements_by_xpath(commonPath+'/div[1]/div[2]/ul/li')
-    follow_doc.close()
+    # follow_doc.close()
+    return stopFlag
 
 def scroll():
     webdriver.get('https://www.mixcloud.com/DjHIDEKI/followers/')
@@ -79,50 +89,59 @@ def scroll():
     sleep(1)
     webdriver.execute_script("return arguments[0].scrollIntoView();", follow_button)
 
-def parseUserDoc(commandPath):
+def parseUserDoc():
     accounts = []
-    accountDoc = open(commandPath+"/mix_cloud/bot_docs/accountInfo.txt","r")
+    accountDoc = open("./bot_docs/accountInfo.txt","r")
     for line in accountDoc.readlines():
         split = line.rstrip().split(',')
         hashtags = []
-        for val in split[5].split('||'):
+        for val in split[4].split('||'):
             hashtags.append(val)
-        account = UserAccount(split[0],split[1],split[2],split[3],split[4], hashtags[1:], split[6])
+        users = []
+        for val in split[5].split('||'):
+            users.append(val)
+        account = UserAccount(split[0],split[1],split[2],split[3],hashtags[1:], users[1:], split[6])
         accounts.append(account)
     accountDoc.close()
     return accounts
 
 def accountInfo(account):
-    print("\nAccount " + account.username)
-    print("Like Percentage: " + account.likePercentage)
-    print("Comment Percentage: " + account.commentPercentage)
-    print("Num Accounts to Interact: " + account.numInteractions)
+    print("\nAccount " + account.email)
+    print("AccountType: " + account.accountType)
+    print("Num Interactions: " + account.numInteractions)
     print("Hashtags Searches: " + str(account.hashtags))
+    print('Follow Account: ' + str(account.users))
+    print("ID Value: " + str(account.id))
     
-def getDefault(accounts):
+def getTargetAccount(accounts, accountID):
     for account in accounts:
-        if int(account.default) == 1:
+        if account.id == accountID:
             return account
     print('NO DEFAULT ACCOUNT RUN ADMIN SCRIPT. Admin.py')
-    exit
+    exit()
 
 
 if __name__ == "__main__":
     print('Mixcloud Quick Follow')
-    commandPath = "C:/Users/plagambino/Documents/Other_Work/QuickFollow/"
-    if len(sys.argv) > 1:
+    commandPath = "C:/Users/Phil/Documents/QuickFollow/"
+    if len(sys.argv) > 2:
         commandPath = sys.argv[1]
-    if not path.exists(commandPath+"mix_cloud/bot_docs/accountInfo.txt"):
-        print('NO BOTS RUN ADMIN SCRIPT. Admin.py')
+        accountID = sys.argv[2]
+    else:
+        print('NOT ENOUGH ARGS. Need path working directory and User ID. Admin.py')
+        exit()
+    if  not path.exists(commandPath+"mix_cloud/bot_docs/accountInfo.txt"):
+        print('Incorrect Account Info Path or No Accounts! Run Admin.py')
         exit()
     else:
-        accounts = parseUserDoc(commandPath)
+        accounts = parseUserDoc()
     chromedriver_path = commandPath+'Bot/chromedriver.exe' 
-    defaultAccount = getDefault(accounts)
-    accountInfo(defaultAccount)
+    curAccount = getTargetAccount(accounts, accountID)
+    accountInfo(curAccount)
     webdriver = webdriver.Chrome(executable_path=chromedriver_path)
-    login(defaultAccount)
-    for person in defaultAccount.hashtags:
-        if random.randint(0,10) > 6:
-            followersFollow(person, defaultAccount)
-    
+    login(curAccount)
+    stopFlag = True
+    for person in curAccount.users:
+        if random.randint(0,10) > 4:
+            stopFlag = followersFollow(person, curAccount, stopFlag)
+    exit()
