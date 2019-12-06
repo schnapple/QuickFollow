@@ -21,9 +21,9 @@ def followByHashtag(hashtag, account, stopFlag):
     return process.runHashtagFollow(webdriver, hashtag, account, stopFlag)
 
 
-def parseUserDoc():
+def parseUserDoc(commandPath):
     accounts = []
-    accountDoc = open("../Admin/account-info/accountInfo.txt","r")
+    accountDoc = open(commandPath+"/Admin/account-info/accountInfo.txt","r")
     for line in accountDoc.readlines():
         split = line.rstrip().split(',')
         hashtags = []
@@ -64,10 +64,11 @@ if __name__ == "__main__":
         print('Incorrect Account Info Path! Run Admin.py')
         exit()
     else:
-        accounts = parseUserDoc()
+        accounts = parseUserDoc(commandPath)
+    sleep(3)
     curAccount = getTargetAccount(accounts, accountID)
     
-    chromedriver_path = commandPath+'Bot/chromedriver.exe' 
+    chromedriver_path = commandPath+'Bot/chromedriver.exe'
     print('Quick Follow is Running %s Version' %(curAccount.accountType))
     accountInfo(curAccount)
     webdriver = webdriver.Chrome(executable_path=chromedriver_path)
