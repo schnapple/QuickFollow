@@ -1,3 +1,6 @@
 instagram/bot_docs/
 mix_cloud/bot_docs/
 Admin/account-info/
+Admin/__pycache__/
+Bot/__pycache__/
+account-info

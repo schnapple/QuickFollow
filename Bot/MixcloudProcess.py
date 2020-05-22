@@ -6,11 +6,23 @@ import datetime
 
 class MixcloudProcess:
     def __init__(self):
-        self.login_button = '//*[@id="react-root"]/div/section/div[3]/div/div/header/div/div[3]/div/span[1]'
-        self.email_input = '//*[@id="react-root"]/div/section/div[1]/span[16]/div/div[2]/div/div/div/form/div[1]/div/input'
-        self.password_input = '//*[@id="react-root"]/div/section/div[1]/span[16]/div/div[2]/div/div/div/form/div[2]/div/input'
+        self.login_button = '//*[@id="react-root"]/div/section/div[3]/div/div/div[2]/div/div[2]/div[5]/p'
+        self.email_input = '//*[@id="email"]'
+        self.password_input = '//*[@id="password"]'
         self.follow_list = '/html/body/div[1]/div/section/div[4]/div/div/div/div/div[4]/main/div[1]/div[2]/ul/li'
         self.follow_list_item = '/html/body/div[1]/div/section/div[4]/div/div/div/div/div[4]/main/div[1]/div[2]/ul/li['
+        self.follow_list = []
+
+    def parseDoc(self):
+        filepath = './account-info/mixcloudFollowedList.txt'
+        with open(filepath) as fp:
+            line = fp.readline()
+            while line:
+                self.follow_list.append(line.replace('\n',''))
+                line = fp.readline()
+        fp.close() 
+        print(self.follow_list)
+
 
     def runLogin(self, webdriver, account):
         webdriver.get('https://www.%s.com' %(str.lower(account.accountType)))
@@ -30,33 +42,41 @@ class MixcloudProcess:
         follow_list = webdriver.find_elements_by_xpath(self.follow_list)
         index = 1
         like_count = 0
+        file_object = open('./account-info/mixcloudFollowedList.txt', 'a')
         while(like_count < int(account.numInteractions)):
             for val in range(index,len(follow_list)):
                 if random.randint(0,5) > 2 and stopFlag:
-                    stopFlag = self.clickFollowButton(webdriver, val, stopFlag)
+                    stopFlag = self.clickFollowButton(webdriver, val, stopFlag, file_object)
+                    if stopFlag:
+                        like_count += 1
                     webdriver.execute_script("window.scrollBy(0, 200)")
                     if(like_count >= int(account.numInteractions)):
                         break
             index = len(follow_list)
             follow_list = webdriver.find_elements_by_xpath(self.follow_list)
+        file_object.close()
         return stopFlag
 
-    def clickFollowButton(self, webdriver, val, stopFlag):
+    def clickFollowButton(self, webdriver, val, stopFlag, file_object):
         try:
             follow_button = webdriver.find_element_by_xpath(self.follow_list_item +str(val)+ ']/button')
+            follow_id = webdriver.find_element_by_xpath(self.follow_list_item +str(val)+ ']/span/b/span/a')
+            if follow_id in self.follow_list:
+                return stopFlag
+            file_object.write(follow_id.text+'\n')
             webdriver.execute_script("return arguments[0].scrollIntoView();", follow_button)
             webdriver.execute_script("window.scrollBy(0, -" + str(random.randint(150,200)) + ")")
             sleep(random.uniform(.5,6))
             follow_button.click()
             sleep(random.uniform(.5,2))
             follow_text = webdriver.find_element_by_xpath(self.follow_list_item +str(val)+ ']/button/span')
-            print(follow_text.text)
             if follow_text.text == 'Follow':
                 print('Hit Max Follows Stopping')
                 stopFlag = False
+                return stopFlag
+            follow_text = webdriver.find_element_by_xpath(self.follow_list_item +str(val)+ ']/button/span')
             webdriver.execute_script("window.scrollBy(0, -" + str(random.randint(10,50)) + ")")
             name = webdriver.find_element_by_xpath(self.follow_list_item +str(val)+ ']/span/b/span/a')
-            like_count = like_count + 1
         except:
             print("Follow Button Not Present: "+str(val))
         return stopFlag
