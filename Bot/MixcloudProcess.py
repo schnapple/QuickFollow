@@ -5,23 +5,24 @@ import random
 import datetime
 
 class MixcloudProcess:
-    def __init__(self):
+    def __init__(self, path):
         self.login_button = '//*[@id="react-root"]/div/section/div[3]/div/div/div[2]/div/div[2]/div[5]/p'
         self.email_input = '//*[@id="email"]'
         self.password_input = '//*[@id="password"]'
         self.follow_list = '/html/body/div[1]/div/section/div[4]/div/div/div/div/div[4]/main/div[1]/div[2]/ul/li'
         self.follow_list_item = '/html/body/div[1]/div/section/div[4]/div/div/div/div/div[4]/main/div[1]/div[2]/ul/li['
-        self.follow_list = []
+        self.followed_list = []
+        self.path = path
 
     def parseDoc(self):
-        filepath = './account-info/mixcloudFollowedList.txt'
+        filepath = self.path+'/account-info/mixcloudFollowedList.txt'
         with open(filepath) as fp:
             line = fp.readline()
             while line:
-                self.follow_list.append(line.replace('\n',''))
+                self.followed_list.append(line.replace('\n',''))
                 line = fp.readline()
         fp.close() 
-        print(self.follow_list)
+        print(self.followed_list)
 
 
     def runLogin(self, webdriver, account):
@@ -42,7 +43,7 @@ class MixcloudProcess:
         follow_list = webdriver.find_elements_by_xpath(self.follow_list)
         index = 1
         like_count = 0
-        file_object = open('./account-info/mixcloudFollowedList.txt', 'a')
+        file_object = open(self.path+'/account-info/mixcloudFollowedList.txt', 'a')
         while(like_count < int(account.numInteractions)):
             for val in range(index,len(follow_list)):
                 if random.randint(0,5) > 2 and stopFlag:
@@ -61,7 +62,7 @@ class MixcloudProcess:
         try:
             follow_button = webdriver.find_element_by_xpath(self.follow_list_item +str(val)+ ']/button')
             follow_id = webdriver.find_element_by_xpath(self.follow_list_item +str(val)+ ']/span/b/span/a')
-            if follow_id in self.follow_list:
+            if follow_id in self.followed_list:
                 return stopFlag
             file_object.write(follow_id.text+'\n')
             webdriver.execute_script("return arguments[0].scrollIntoView();", follow_button)

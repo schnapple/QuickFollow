@@ -22,9 +22,9 @@ def followByHashtag(hashtag, account, stopFlag):
     return process.runHashtagFollow(webdriver, hashtag, account, stopFlag)
 
 
-def parseUserDoc():
+def parseUserDoc(stringPath):
     accounts = []
-    accountDoc = open("./account-info/accountInfo.txt","r")
+    accountDoc = open(stringPath+"/account-info/accountInfo.txt","r")
     for line in accountDoc.readlines():
         split = line.rstrip().split(',')
         hashtags = []
@@ -58,26 +58,28 @@ def getTargetAccount(accounts, accountID):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) > 1:
+    if len(sys.argv) > 2:
         accountID = sys.argv[1]
+        stringPath = sys.argv[2]
+        print(path)
     else:
         print('NOT ENOUGH ARGS. Need path working directory and User ID. Admin.py')
         exit()
-    if  not path.exists("./account-info/accountInfo.txt"):
+    if  not path.exists(stringPath+"/account-info/accountInfo.txt"):
         print('Incorrect Account Info Path! Run Admin.py')
         exit()
     else:
-        accounts = parseUserDoc()
+        accounts = parseUserDoc(stringPath)
     sleep(3)
     curAccount = getTargetAccount(accounts, accountID)
     
-    chromedriver_path = '/Users/plagambino/Documents/QuickFollow/Bot/chromedriver'
+    chromedriver_path = stringPath+'/Bot/chromedriver'
     print('Quick Follow is Running %s Version' %(curAccount.accountType))
     accountInfo(curAccount)
     webdriver = webdriver.Chrome(executable_path=chromedriver_path)
     stopFlag = True
     if curAccount.accountType == 'Mixcloud':
-        process = MixcloudProcess()
+        process = MixcloudProcess(stringPath)
         login(curAccount)
         for person in curAccount.users:
             if random.randint(0,10) > 4:
@@ -88,5 +90,5 @@ if __name__ == "__main__":
         for hashtag in curAccount.hashtags:
             if random.randint(0,10) > 0:
                 stopFlag = followByHashtag(hashtag, curAccount, stopFlag)
-    
+    webdriver.close()
     exit()
